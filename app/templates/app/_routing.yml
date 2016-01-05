@@ -1,0 +1,4 @@
+<%= app_lower %>_front_template:
+    resource: "@<%= app %>FrontTemplateBundle/Controller/"
+    type:     annotation
+    prefix:   /front/gui

@@ -14,10 +14,11 @@ var Download = require('download');
 module.exports = yeoman.generators.Base.extend({
     initializing: function () {
         this.pkg = require('../package.json');
-        var Appventus = chalk.red("\n    #                  #     #                                   \n   # #   #####  #####  #     # ###### #    # ##### #    #  ####  \n  #   #  #    # #    # #     # #      ##   #   #   #    # #      \n #     # #    # #    # #     # #####  # #  #   #   #    #  ####  \n ####### #####  #####   #   #  #      #  # #   #   #    #      # \n #     # #      #        # #   #      #   ##   #   #    # #    # \n #     # #      #         #    ###### #    #   #    ####   ####  \n ");
+        var Appventus = chalk.red('\n    #                  #     #                                   \n   # #   #####  #####  #     # ###### #    # ##### #    #  ####  \n  #   #  #    # #    # #     # #      ##   #   #   #    # #      \n #     # #    # #    # #     # #####  # #  #   #   #    #  ####  \n ####### #####  #####   #   #  #      #  # #   #   #    #      # \n #     # #      #        # #   #      #   ##   #   #    # #    # \n #     # #      #         #    ###### #    #   #    ####   ####  \n ');
         var AppventusDesc = '\n\n Scaffolds a standard Symfony2 application with Yeoman and the Appventus Sauce\n\n Created by ' + chalk.red('@AppVentus ') + '\n ' + chalk.cyan('https://appventus.com/') + '\n';
         this.log(Appventus);
         this.log(AppventusDesc);
+        this.conflicter.force = true;
     },
 
     askSymfonyStandard: function () {
@@ -94,6 +95,21 @@ module.exports = yeoman.generators.Base.extend({
                 done();
             }.bind(this));
         }
+    },
+
+    askAppBundleName: function() {
+        var done = this.async();
+        var prompts = [{
+            type: 'input',
+            name: 'appBundleName',
+            message: 'What is the name of App group bundles',
+            default: 'Acme',
+        }];
+
+        this.prompt(prompts, function (answers) {
+            this.appBundleName = answers.appBundleName;
+            done();
+        }.bind(this));
     },
 
     _unzip: function (archive, destination, opts, cb) {
@@ -302,6 +318,46 @@ module.exports = yeoman.generators.Base.extend({
                     }
                 });
             }
+        },
+
+        deleteAppBundle: function() {
+            this.spawnCommand('rm', ['-r', 'src/AppBundle']);
+            this.template('app/_appKernel.php', 'app/appKernel.php');
+        },
+
+        installFrontTemplate: function () {
+            var generator = this;
+            var bundlePath = 'src/' + generator.appBundleName + '/Front/TemplateBundle';
+            var ls = this.spawnCommand('php', ['app/console', 'generate:bundle', '--namespace=' + this.appBundleName + '/Front/TemplateBundle', '--bundle-name=' + this.appBundleName + 'FrontTemplateBundle', '--no-interaction']);
+
+            var copyBundlePartials = function (generator, partial) {
+                generator.fs.copyTpl(
+                    generator.templatePath('TemplateBundle/' + partial),
+                    generator.destinationPath(bundlePath + '/' + partial),
+                    {
+                        app: generator.appBundleName
+                    }
+                );
+            };
+
+            ls.on('close', function (code) {
+                copyBundlePartials(generator, 'Resources');
+                generator.spawnCommand('rm', ['-r', bundlePath + '/Controller']);
+                copyBundlePartials(generator, 'Controller');
+            });
+        },
+
+        generateRouting: function() {
+            this.spawnCommand('rm', ['-r', 'app/config/routing.yml']);
+
+            this.fs.copyTpl(
+                this.templatePath('app/_routing.yml'),
+                this.destinationPath('app/config/routing.yml'),
+                {
+                    app: this.appBundleName,
+                    app_lower: this.appBundleName.toLowerCase(),
+                }
+            );
         },
     }
 });
