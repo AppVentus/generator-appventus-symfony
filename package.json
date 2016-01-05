@@ -1,14 +1,14 @@
 {
-  "name": "generator-joli-symfony",
+  "name": "generator-appventus-symfony",
   "version": "1.1.0",
-  "description": "Scaffolds a standard Symfony2 application with Yeoman",
+  "description": "Scaffolds a standard Symfony2 application with Yeoman and the Appventus Sauce",
   "license": "MIT",
   "main": "app/index.js",
   "repository": "jolicode/generator-joli-symfony",
   "author": {
-    "name": "Laurent Brunet",
+    "name": "Loïc Goyet",
     "email": "",
-    "url": "https://github.com/lbrunet"
+    "url": "https://github.com/loicgoyet"
   },
   "engines": {
     "node": ">=0.10.0"

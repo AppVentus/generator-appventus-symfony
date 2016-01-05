@@ -1,4 +1,4 @@
-JoliSymfony - Symfony2
+AppVentusSymfony - Symfony2
 =====================
 [![NPM Version](https://img.shields.io/npm/v/generator-joli-symfony.svg?style=flat-square)](https://www.npmjs.com/package/generator-joli-symfony)
 [![Download Month](https://img.shields.io/npm/dm/generator-joli-symfony.svg?style=flat-square)](https://www.npmjs.com/package/generator-joli-symfony)
