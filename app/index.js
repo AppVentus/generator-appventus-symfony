@@ -14,10 +14,10 @@ var Download = require('download');
 module.exports = yeoman.generators.Base.extend({
   initializing: function () {
     this.pkg = require('../package.json');
-    var Jolicode = '\n        ' + chalk.yellow('##') + '       ##            ##  ##   #######                   ##                ' + chalk.yellow('##') + '  ' + chalk.yellow('##') + '  \n      ' + chalk.yellow('##') + '         ##            ##      ##     ##                  ##               ' + chalk.yellow('##') + '    ' + chalk.yellow('##') + '  \n     ' + chalk.yellow('##') + '          ##   ######   ##  ##  ##          ######    #######   ######     ' + chalk.yellow('##') + '      ' + chalk.yellow('##') + '  \n     ' + chalk.yellow('##') + '          ##  ##    ##  ##  ##  ##         ##    ##  ##    ##  ########   ' + chalk.yellow('##') + '       ' + chalk.yellow('##') + '  \n      ' + chalk.yellow('##') + '  ##    ###  ##    ##  ##  ##  ##     ##  ##    ##  ##    ##  ##        ' + chalk.yellow('##') + '       ' + chalk.yellow('##') + '  \n       ' + chalk.yellow('##') + '   #####     ######   ##  ##   #######    ######    #######   ######  ' + chalk.yellow('##') + '       ' + chalk.yellow('##');
-    var JolicodeDesc = '\n\n   A Yeoman generator for the Symfony2 framework\n\n   Created by ' + chalk.yellow('@JoliCode ') + ' & ' + chalk.blue('@lbrunet_com') + '\n   ' + chalk.cyan('http://jolicode.com/') + '\n';
-    this.log(Jolicode);
-    this.log(JolicodeDesc);
+    var Appventus = chalk.red("\n    #                  #     #                                   \n   # #   #####  #####  #     # ###### #    # ##### #    #  ####  \n  #   #  #    # #    # #     # #      ##   #   #   #    # #      \n #     # #    # #    # #     # #####  # #  #   #   #    #  ####  \n ####### #####  #####   #   #  #      #  # #   #   #    #      # \n #     # #      #        # #   #      #   ##   #   #    # #    # \n #     # #      #         #    ###### #    #   #    ####   ####  \n ");
+    var AppventusDesc = '\n\n Scaffolds a standard Symfony2 application with Yeoman and the Appventus Sauce\n\n Created by ' + chalk.red('@AppVentus ') + '\n ' + chalk.cyan('https://appventus.com/') + '\n';
+    this.log(Appventus);
+    this.log(AppventusDesc);
   },
 
   askSymfonyStandard: function () {
