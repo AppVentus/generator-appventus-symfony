@@ -333,7 +333,7 @@ module.exports = yeoman.generators.Base.extend({
 
             var copyBundlePartials = function (generator, partial) {
                 generator.fs.copyTpl(
-                    generator.templatePath('TemplateBundle/' + partial),
+                    generator.templatePath('src/Acme/Front/TemplateBundle/' + partial),
                     generator.destinationPath(bundlePath + '/' + partial),
                     {
                         app: generator.appBundleName
@@ -348,7 +348,7 @@ module.exports = yeoman.generators.Base.extend({
             });
 
             this.fs.copyTpl(
-                this.templatePath('app/Resources/views/AppFrontTemplateBundle'),
+                this.templatePath('app/Resources/views/AcmeFrontTemplateBundle'),
                 this.destinationPath('app/Resources/views/' + generator.appBundleName + 'FrontTemplateBundle'),
                 {
                     app: this.appBundleName
