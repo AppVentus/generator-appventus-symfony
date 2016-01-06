@@ -1,1 +1,2 @@
+<% if (bootstrap) { %>@import '../../public/bower_components/bootstrap-sass/assets/stylesheets/bootstrap';<% } %>
 <% if (gui.cover) { %>@import '../../public/bower_components/cover-component/cover.scss';<% } %>

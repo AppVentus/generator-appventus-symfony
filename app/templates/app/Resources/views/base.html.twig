@@ -9,11 +9,17 @@
         {% endblock %}
 
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
+
+        {% block javascripts_top %}
+            <% if (bootstrap) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/jquery/dist/jquery.min.js') }}"></script><% } %>
+        {% endblock %}
     </head>
 
     <body>
         {% block body %}{% endblock %}
 
-        {% block javascripts %}{% endblock %}
+        {% block javascripts_bottom %}
+            <% if (bootstrap) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/bootstrap-sass/assets/javascripts/bootstrap.min.js') }}"></script><% } %>
+        {% endblock %}
     </body>
 </html>

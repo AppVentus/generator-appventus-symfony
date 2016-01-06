@@ -114,6 +114,21 @@ module.exports = yeoman.generators.Base.extend({
         }.bind(this));
     },
 
+    askBootstrap: function() {
+        var done = this.async();
+        var prompts = [{
+            type: 'confirm',
+            name: 'bootstrap',
+            message: 'Would you like to use bootstrap ?',
+            default: true
+        }];
+
+        this.prompt(prompts, function (answers) {
+            this.bootstrap = answers.bootstrap;
+            done();
+        }.bind(this));
+    },
+
     askGuiBricks: function() {
         var done = this.async();
         var prompts = [{
@@ -290,7 +305,7 @@ module.exports = yeoman.generators.Base.extend({
 
     end: {
         addBootStrapSass: function () {
-            if (this.bootStrapSass && this.globalBower) {
+            if (this.bootstrap && this.globalBower) {
                 child_process.exec('bower install bootstrap-sass-official --save', function (error, stdout, stderr) {
                     if (error !== null) {
                         console.log('exec error: ' + error);
@@ -361,7 +376,10 @@ module.exports = yeoman.generators.Base.extend({
             this.fs.copyTpl(
                 this.templatePath('app/Resources/views/base.html.twig'),
                 this.destinationPath('app/Resources/views/base.html.twig'),
-                { app: this.appBundleName }
+                {
+                    app: this.appBundleName,
+                    bootstrap: this.bootstrap,
+                }
             );
         },
 
@@ -377,6 +395,7 @@ module.exports = yeoman.generators.Base.extend({
                     {
                         app: generator.appBundleName,
                         gui: generator.gui,
+                        bootstrap: generator.bootstrap,
                     }
                 );
             };
@@ -412,6 +431,7 @@ module.exports = yeoman.generators.Base.extend({
                 {
                     app: this.appBundleName,
                     gui: this.gui,
+                    bootstrap: this.bootstrap,
                 }
             );
         },
