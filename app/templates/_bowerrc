@@ -1,3 +1,3 @@
 {
-    "directory": "app/Resources/libs"
+    "directory": "src/<%= app %>/Front/TemplateBundle/Resources/public/bower_components"
 }

@@ -1,1 +1,1 @@
-@import '../../bower_components/normalize-css/normalize.css';
+<% if (gui.cover) { %>@import '../../public/bower_components/cover-component/cover.scss';<% } %>

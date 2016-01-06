@@ -10,6 +10,7 @@ var child_process = require('child_process');
 var request = require('request');
 var _ = require('lodash');
 var Download = require('download');
+var mkdirp = require('mkdirp');
 
 module.exports = yeoman.generators.Base.extend({
     initializing: function () {
@@ -19,6 +20,7 @@ module.exports = yeoman.generators.Base.extend({
         this.log(Appventus);
         this.log(AppventusDesc);
         this.conflicter.force = true;
+        this.gui = {};
     },
 
     askSymfonyStandard: function () {
@@ -108,6 +110,31 @@ module.exports = yeoman.generators.Base.extend({
 
         this.prompt(prompts, function (answers) {
             this.appBundleName = answers.appBundleName;
+            done();
+        }.bind(this));
+    },
+
+    askGuiBricks: function() {
+        var done = this.async();
+        var prompts = [{
+            type: 'checkbox',
+            name: 'guiBricks',
+            message: 'Which bricks do you want to include ?',
+            choices: [
+                {
+                    name: 'cover',
+                    value: 'cover',
+                    checked: true
+                }
+            ]
+        }];
+
+        this.prompt(prompts, function (answers) {
+            function hasFeature(feat) {
+                return answers.guiBricks.indexOf(feat) !== -1;
+            }
+
+            this.gui.cover = hasFeature('cover');
             done();
         }.bind(this));
     },
@@ -244,7 +271,7 @@ module.exports = yeoman.generators.Base.extend({
             );
 
             this.template('_gitignore', '.gitignore');
-            this.template('_bower.json', 'bower.json');
+            this.template('bower.json', 'bower.json');
             this.template('_package.json', 'package.json');
             this.template('_scss-lint.yml', '.scss-lint.yml');
         },
@@ -269,6 +296,18 @@ module.exports = yeoman.generators.Base.extend({
                         console.log('exec error: ' + error);
                     } else {
                         console.log(chalk.green('[bootstrap-sass-official] installed!'));
+                    }
+                });
+            }
+        },
+
+        installGuiBricks: function() {
+            if (this.gui.cover && this.globalBower) {
+                child_process.exec('bower install cover-component --save', function (error, stdout, stderr) {
+                    if (error !== null) {
+                        console.log('exec error: ' + error);
+                    } else {
+                        console.log(chalk.green('[cover-component] installed!'));
                     }
                 });
             }
@@ -336,7 +375,8 @@ module.exports = yeoman.generators.Base.extend({
                     generator.templatePath('src/Acme/Front/TemplateBundle/' + partial),
                     generator.destinationPath(bundlePath + '/' + partial),
                     {
-                        app: generator.appBundleName
+                        app: generator.appBundleName,
+                        gui: generator.gui,
                     }
                 );
             };
@@ -345,13 +385,33 @@ module.exports = yeoman.generators.Base.extend({
                 copyBundlePartials(generator, 'Resources');
                 generator.spawnCommand('rm', ['-r', bundlePath + '/Controller']);
                 copyBundlePartials(generator, 'Controller');
+                mkdirp.sync('src/' + generator.appBundleName + '/Front/TemplateBundle/Resources/public/bower_components');
+
+                /*
+                 * Copy config.yml in order to add twig 'bower_components' path
+                 */
+                generator.fs.copyTpl(
+                    generator.templatePath('app/config/config.yml'),
+                    generator.destinationPath('app/config/config.yml'),
+                    { app: generator.appBundleName }
+                );
+
+                /*
+                 * generates bowerrc that will target src @AcmeFrontTemplateBundle/Resources/public/bower_components
+                 */
+                generator.fs.copyTpl(
+                    generator.templatePath('_bowerrc'),
+                    generator.destinationPath('.bowerrc'),
+                    { app: generator.appBundleName }
+                );
             });
 
             this.fs.copyTpl(
                 this.templatePath('app/Resources/views/AcmeFrontTemplateBundle'),
                 this.destinationPath('app/Resources/views/' + generator.appBundleName + 'FrontTemplateBundle'),
                 {
-                    app: this.appBundleName
+                    app: this.appBundleName,
+                    gui: this.gui,
                 }
             );
         },
@@ -367,6 +427,6 @@ module.exports = yeoman.generators.Base.extend({
                     app_lower: this.appBundleName.toLowerCase(),
                 }
             );
-        },
+        }
     }
 });
