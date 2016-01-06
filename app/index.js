@@ -237,14 +237,16 @@ module.exports = yeoman.generators.Base.extend({
         },
 
         app: function () {
-            this.template('_gulpfile.js', 'gulpfile.js');
-
-            this.fs.copy(
-                this.templatePath('_gitignore'),
-                this.destinationPath('.gitignore')
+            this.fs.copyTpl(
+                this.templatePath('gulpfile.js'),
+                this.destinationPath('gulpfile.js'),
+                { app: this.appBundleName }
             );
+
+            this.template('_gitignore', '.gitignore');
             this.template('_bower.json', 'bower.json');
             this.template('_package.json', 'package.json');
+            this.template('_scss-lint.yml', '.scss-lint.yml');
         },
 
         projectfiles: function () {
@@ -314,6 +316,14 @@ module.exports = yeoman.generators.Base.extend({
             this.spawnCommand('rm', ['-r', 'src/AppBundle']);
             this.spawnCommand('rm', ['-r', 'app/Resources/views/default']);
             this.template('app/_appKernel.php', 'app/appKernel.php');
+        },
+
+        installLayout: function () {
+            this.fs.copyTpl(
+                this.templatePath('app/Resources/views/base.html.twig'),
+                this.destinationPath('app/Resources/views/base.html.twig'),
+                { app: this.appBundleName }
+            );
         },
 
         installFrontTemplate: function () {
