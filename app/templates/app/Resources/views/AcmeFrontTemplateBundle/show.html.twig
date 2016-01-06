@@ -1,6 +1,6 @@
 {% extends '::base.html.twig' %}
 
 {% block body %}
-    <h1>Guidelines for User Interface <%= app %></h1>
+    <h1 class="container">Guidelines for User Interface <%= app %></h1>
     <% if (gui.cover) { %>{% include "@bower/cover-component/gui.html.twig" %}<% } %>
 {% endblock body %}
