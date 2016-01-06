@@ -9,7 +9,7 @@
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "make-dev": "npm install && bower install && php bin/console assets:install && gulp",
+        "make-dev": "npm install && bower install && php app/console assets:install && gulp",
         "start-dev": "gulp && gulp serve"
     },
     "devDependencies": {
