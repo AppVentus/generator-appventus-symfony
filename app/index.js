@@ -259,16 +259,6 @@ module.exports = yeoman.generators.Base.extend({
         }
     },
 
-    install: {
-        installComponents: function () {
-            this.installDependencies({
-                bower: this.globalBower,
-                npm: true,
-                skipInstall: false
-            });
-        }
-    },
-
     end: {
         addBootStrapSass: function () {
             if (this.bootStrapSass && this.globalBower) {

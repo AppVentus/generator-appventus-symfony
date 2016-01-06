@@ -9,7 +9,11 @@
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "make-dev": "npm install && bower install && php app/console assets:install && gulp",
+        "getcomposer": "curl -sS https://getcomposer.org/installer | php",
+        "cc": "php app/console ca:cl",
+        "dsu": "php app/console doctrine:schema:update --force",
+        "assets": "php app/console assets:install web",
+        "make-dev": "npm run getcomposer && php composer.phar install && npm install && bower install && npm run dsu && npm run assets && gulp",
         "start-dev": "gulp && gulp serve"
     },
     "devDependencies": {
