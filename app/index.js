@@ -322,6 +322,7 @@ module.exports = yeoman.generators.Base.extend({
 
         deleteAppBundle: function() {
             this.spawnCommand('rm', ['-r', 'src/AppBundle']);
+            this.spawnCommand('rm', ['-r', 'app/Resources/views/default']);
             this.template('app/_appKernel.php', 'app/appKernel.php');
         },
 
@@ -345,6 +346,14 @@ module.exports = yeoman.generators.Base.extend({
                 generator.spawnCommand('rm', ['-r', bundlePath + '/Controller']);
                 copyBundlePartials(generator, 'Controller');
             });
+
+            this.fs.copyTpl(
+                this.templatePath('app/Resources/views/AppFrontTemplateBundle'),
+                this.destinationPath('app/Resources/views/' + generator.appBundleName + 'FrontTemplateBundle'),
+                {
+                    app: this.appBundleName
+                }
+            );
         },
 
         generateRouting: function() {

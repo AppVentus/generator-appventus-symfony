@@ -9,12 +9,10 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 class GuiController extends Controller
 {
     /**
-     * @Route("/gui", name="front_template_gui")
-     * @Template()
+     * @Route("/", name="front_template_gui")
      */
     public function indexAction()
     {
-
-        return array ();
+        return $this->render('<%= app %>FrontTemplateBundle/show.html.twig');
     }
 }
