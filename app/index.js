@@ -48,8 +48,8 @@ module.exports = yeoman.generators.Base.extend({
         this.conflicter.force = true;
         this.gui = gui;
 
-        this.log(chalk.red('\n    #                  #     #                                   \n   # #   #####  #####  #     # ###### #    # ##### #    #  ####  \n  #   #  #    # #    # #     # #      ##   #   #   #    # #      \n #     # #    # #    # #     # #####  # #  #   #   #    #  ####  \n ####### #####  #####   #   #  #      #  # #   #   #    #      # \n #     # #      #        # #   #      #   ##   #   #    # #    # \n #     # #      #         #    ###### #    #   #    ####   ####  \n '));
-        this.log('\n\n Scaffolds a standard Symfony2 application with Yeoman and the Appventus Sauce\n\n Created by ' + chalk.red('@AppVentus ') + '\n ' + chalk.cyan('https://appventus.com/') + '\n');
+        this.log(chalk.red('\n    #') + '                  #     #                                   \n' + chalk.red('   # #   #####  #####') + '  #     # ###### #    # ##### #    #  ####  \n' + chalk.red('  #   #  #    # #    #') + ' #     # #      ##   #   #   #    # #      \n' + chalk.red(' #     # #    # #    #') + ' #     # #####  # #  #   #   #    #  ####  \n' + chalk.red(' ####### #####  #####') + '   #   #  #      #  # #   #   #    #      # \n' + chalk.red(' #     # #      #') + '        # #   #      #   ##   #   #    # #    # \n' + chalk.red(' #     # #      #') + '         #    ###### #    #   #    ####   ####');
+        this.log('\n Scaffolds a standard Symfony2 application with Yeoman and the Appventus Sauce\n\n Created by ' + chalk.red('@AppVentus ') + '\n ' + chalk.cyan('https://appventus.com/') + '\n');
     },
 
     askSymfonyStandard: function () {
