@@ -1,5 +1,4 @@
 'use strict';
-
 var yeoman = require('yeoman-generator');
 var chalk = require('chalk');
 var path = require('path');
@@ -12,15 +11,45 @@ var _ = require('lodash');
 var Download = require('download');
 var mkdirp = require('mkdirp');
 
+var gui = [
+    {
+        'name': 'bootstrap',
+        'git': 'https://github.com/twbs/bootstrap-sass',
+        'bower': 'bootstrap-sass',
+        'scss': 'assets/stylesheets/bootstrap',
+        'js': {
+            'top': false,
+            'bottom': 'assets/javascripts/bootstrap.min.js',
+        },
+        'gui': false,
+        'bowerRequirement': {
+            'js': {
+                'top': 'jquery/dist/jquery.min.js',
+                'bottom': false,
+            },
+        },
+        'include': true,
+    },
+    {
+        'name': 'cover',
+        'git': 'https://github.com/LoicGoyet/cover',
+        'bower': 'cover-component',
+        'scss': 'cover.scss',
+        'js': false,
+        'gui': 'gui.html.twig',
+        'bowerRequirement': false,
+        'include': true,
+    },
+];
+
 module.exports = yeoman.generators.Base.extend({
     initializing: function () {
         this.pkg = require('../package.json');
-        var Appventus = chalk.red('\n    #                  #     #                                   \n   # #   #####  #####  #     # ###### #    # ##### #    #  ####  \n  #   #  #    # #    # #     # #      ##   #   #   #    # #      \n #     # #    # #    # #     # #####  # #  #   #   #    #  ####  \n ####### #####  #####   #   #  #      #  # #   #   #    #      # \n #     # #      #        # #   #      #   ##   #   #    # #    # \n #     # #      #         #    ###### #    #   #    ####   ####  \n ');
-        var AppventusDesc = '\n\n Scaffolds a standard Symfony2 application with Yeoman and the Appventus Sauce\n\n Created by ' + chalk.red('@AppVentus ') + '\n ' + chalk.cyan('https://appventus.com/') + '\n';
-        this.log(Appventus);
-        this.log(AppventusDesc);
         this.conflicter.force = true;
-        this.gui = {};
+        this.gui = gui;
+
+        this.log(chalk.red('\n    #                  #     #                                   \n   # #   #####  #####  #     # ###### #    # ##### #    #  ####  \n  #   #  #    # #    # #     # #      ##   #   #   #    # #      \n #     # #    # #    # #     # #####  # #  #   #   #    #  ####  \n ####### #####  #####   #   #  #      #  # #   #   #    #      # \n #     # #      #        # #   #      #   ##   #   #    # #    # \n #     # #      #         #    ###### #    #   #    ####   ####  \n '));
+        this.log('\n\n Scaffolds a standard Symfony2 application with Yeoman and the Appventus Sauce\n\n Created by ' + chalk.red('@AppVentus ') + '\n ' + chalk.cyan('https://appventus.com/') + '\n');
     },
 
     askSymfonyStandard: function () {
@@ -114,34 +143,23 @@ module.exports = yeoman.generators.Base.extend({
         }.bind(this));
     },
 
-    askBootstrap: function() {
-        var done = this.async();
-        var prompts = [{
-            type: 'confirm',
-            name: 'bootstrap',
-            message: 'Would you like to use bootstrap ?',
-            default: true
-        }];
-
-        this.prompt(prompts, function (answers) {
-            this.bootstrap = answers.bootstrap;
-            done();
-        }.bind(this));
-    },
-
     askGuiBricks: function() {
+        var choices = [];
+        for (var key in gui) {
+            var component = gui[key];
+            var choice = choices.push({
+                name: component.name + ' (' + component.git + ')',
+                value: component.name,
+                checked: component.include
+            });
+        }
+
         var done = this.async();
         var prompts = [{
             type: 'checkbox',
             name: 'guiBricks',
             message: 'Which bricks do you want to include ?',
-            choices: [
-                {
-                    name: 'cover',
-                    value: 'cover',
-                    checked: true
-                }
-            ]
+            choices: choices
         }];
 
         this.prompt(prompts, function (answers) {
@@ -149,7 +167,10 @@ module.exports = yeoman.generators.Base.extend({
                 return answers.guiBricks.indexOf(feat) !== -1;
             }
 
-            this.gui.cover = hasFeature('cover');
+            for (var key in gui) {
+                var component = gui[key];
+                component.include = hasFeature(component.name);
+            }
             done();
         }.bind(this));
     },
@@ -250,7 +271,6 @@ module.exports = yeoman.generators.Base.extend({
                             } else {
                                 console.log(chalk.green('Installing bower locally.'));
                                 console.log('See ' + chalk.yellow('http://bower.io/') + ' for more details on bower.');
-                                console.log('');
                                 this.globalBower = true;
                                 done();
                             }
@@ -304,27 +324,19 @@ module.exports = yeoman.generators.Base.extend({
     },
 
     end: {
-        addBootStrapSass: function () {
-            if (this.bootstrap && this.globalBower) {
-                child_process.exec('bower install bootstrap-sass-official --save', function (error, stdout, stderr) {
-                    if (error !== null) {
-                        console.log('exec error: ' + error);
-                    } else {
-                        console.log(chalk.green('[bootstrap-sass-official] installed!'));
-                    }
-                });
-            }
-        },
-
         installGuiBricks: function() {
-            if (this.gui.cover && this.globalBower) {
-                child_process.exec('bower install cover-component --save', function (error, stdout, stderr) {
-                    if (error !== null) {
-                        console.log('exec error: ' + error);
-                    } else {
-                        console.log(chalk.green('[cover-component] installed!'));
-                    }
-                });
+            for (var key in gui) {
+                var component = gui[key];
+
+                if (component.include && this.globalBower) {
+                    child_process.exec('bower install ' + component.bower + ' --save', function (error, stdout, stderr) {
+                        if (error !== null) {
+                            console.log('exec error: ' + error);
+                        } else {
+                            console.log(chalk.green('[' + component.name + '] installed!'));
+                        }
+                    });
+                }
             }
         },
 
@@ -340,6 +352,17 @@ module.exports = yeoman.generators.Base.extend({
                 var newConf = yaml.dump(conf, {indent: 4});
                 fs.writeFileSync('app/config/config.yml', newConf);
             }
+        },
+
+        deleteAppBundle: function() {
+            this.spawnCommand('rm', ['-r', 'src/AppBundle']);
+            this.spawnCommand('rm', ['-r', 'app/Resources/views/default']);
+
+            var appKernelPath = 'app/AppKernel.php';
+            var appKernelContents = this.readFileAsString(appKernelPath);
+
+            var newAppKernelContents = appKernelContents.replace('new AppBundle\\AppBundle(),', '');
+            fs.writeFileSync(appKernelPath, newAppKernelContents);
         },
 
         updateAppKernel: function () {
@@ -366,19 +389,13 @@ module.exports = yeoman.generators.Base.extend({
             }
         },
 
-        deleteAppBundle: function() {
-            this.spawnCommand('rm', ['-r', 'src/AppBundle']);
-            this.spawnCommand('rm', ['-r', 'app/Resources/views/default']);
-            this.template('app/_appKernel.php', 'app/appKernel.php');
-        },
-
         installLayout: function () {
             this.fs.copyTpl(
                 this.templatePath('app/Resources/views/base.html.twig'),
                 this.destinationPath('app/Resources/views/base.html.twig'),
                 {
                     app: this.appBundleName,
-                    bootstrap: this.bootstrap,
+                    gui: this.gui,
                 }
             );
         },
@@ -395,7 +412,6 @@ module.exports = yeoman.generators.Base.extend({
                     {
                         app: generator.appBundleName,
                         gui: generator.gui,
-                        bootstrap: generator.bootstrap,
                     }
                 );
             };
@@ -431,7 +447,6 @@ module.exports = yeoman.generators.Base.extend({
                 {
                     app: this.appBundleName,
                     gui: this.gui,
-                    bootstrap: this.bootstrap,
                 }
             );
         },

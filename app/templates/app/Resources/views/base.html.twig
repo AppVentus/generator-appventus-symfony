@@ -11,7 +11,8 @@
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
 
         {% block javascripts_top %}
-            <% if (bootstrap) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/jquery/dist/jquery.min.js') }}"></script><% } %>
+            <% gui.forEach(function(component) { %><% if (component.include && component.bowerRequirement.js && component.bowerRequirement.js.top) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/<%= component.bowerRequirement.js.top %>') }}"></script><% } %><% }); %>
+            <% gui.forEach(function(component) { %><% if (component.include && component.js && component.js.top) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/<%= component.bower %>/<%= component.js.top %>') }}"></script><% } %><% }); %>
         {% endblock %}
     </head>
 
@@ -19,7 +20,8 @@
         {% block body %}{% endblock %}
 
         {% block javascripts_bottom %}
-            <% if (bootstrap) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/bootstrap-sass/assets/javascripts/bootstrap.min.js') }}"></script><% } %>
+            <% gui.forEach(function(component) { %><% if (component.include && component.bowerRequirement.js && component.bowerRequirement.js.bottom) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/<%= component.bowerRequirement.js.bottom %>') }}"></script><% } %><% }); %>
+            <% gui.forEach(function(component) { %><% if (component.include && component.js && component.js.bottom) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/<%= component.bower %>/<%= component.js.bottom %>') }}"></script><% } %><% }); %>
         {% endblock %}
     </body>
 </html>
