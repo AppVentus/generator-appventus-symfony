@@ -10,37 +10,7 @@ var request = require('request');
 var _ = require('lodash');
 var Download = require('download');
 var mkdirp = require('mkdirp');
-
-var gui = [
-    {
-        'name': 'bootstrap',
-        'git': 'https://github.com/twbs/bootstrap-sass',
-        'bower': 'bootstrap-sass',
-        'scss': 'assets/stylesheets/bootstrap',
-        'js': {
-            'top': false,
-            'bottom': 'assets/javascripts/bootstrap.min.js',
-        },
-        'gui': false,
-        'bowerRequirement': {
-            'js': {
-                'top': 'jquery/dist/jquery.min.js',
-                'bottom': false,
-            },
-        },
-        'include': true,
-    },
-    {
-        'name': 'cover',
-        'git': 'https://github.com/LoicGoyet/cover',
-        'bower': 'cover-component',
-        'scss': 'cover.scss',
-        'js': false,
-        'gui': 'gui.html.twig',
-        'bowerRequirement': false,
-        'include': true,
-    },
-];
+var gui = require('./gui')();
 
 module.exports = yeoman.generators.Base.extend({
     initializing: function () {
