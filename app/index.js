@@ -329,13 +329,15 @@ module.exports = yeoman.generators.Base.extend({
                 var component = gui[key];
 
                 if (component.include && this.globalBower) {
-                    child_process.exec('bower install ' + component.bower + ' --save', function (error, stdout, stderr) {
-                        if (error !== null) {
-                            console.log('exec error: ' + error);
-                        } else {
-                            console.log(chalk.green('[' + component.name + '] installed!'));
-                        }
-                    });
+                    /* jshint -W083 */
+                        child_process.exec('bower install ' + component.bower + ' --save', function (error, stdout, stderr) {
+                            if (error !== null) {
+                                console.log('exec error: ' + error);
+                            } else {
+                                console.log(chalk.green('[' + component.name + '] installed!'));
+                            }
+                        });
+                    /* jshint +W083 */
                 }
             }
         },
