@@ -163,3 +163,4 @@ linters:
     exclude: []
 
   ZeroUnit:
+    enabled: true
