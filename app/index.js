@@ -14,14 +14,21 @@ var gui = require('./gui')();
 
 module.exports = yeoman.generators.Base.extend({
     initializing: function () {
+        /**
+         * Ascii introduction
+         */
+        this.log(chalk.red('\n    #') + '                  #     #                                   \n' + chalk.red('   # #   #####  #####') + '  #     # ###### #    # ##### #    #  ####  \n' + chalk.red('  #   #  #    # #    #') + ' #     # #      ##   #   #   #    # #      \n' + chalk.red(' #     # #    # #    #') + ' #     # #####  # #  #   #   #    #  ####  \n' + chalk.red(' ####### #####  #####') + '   #   #  #      #  # #   #   #    #      # \n' + chalk.red(' #     # #      #') + '        # #   #      #   ##   #   #    # #    # \n' + chalk.red(' #     # #      #') + '         #    ###### #    #   #    ####   ####');
+        this.log('\n Scaffolds a standard Symfony2 application with Yeoman and the Appventus Sauce\n\n Created by ' + chalk.red('@AppVentus ') + '\n ' + chalk.cyan('https://appventus.com/') + '\n');
+
         this.pkg = require('../package.json');
         this.conflicter.force = true;
         this.gui = gui;
-
-        this.log(chalk.red('\n    #') + '                  #     #                                   \n' + chalk.red('   # #   #####  #####') + '  #     # ###### #    # ##### #    #  ####  \n' + chalk.red('  #   #  #    # #    #') + ' #     # #      ##   #   #   #    # #      \n' + chalk.red(' #     # #    # #    #') + ' #     # #####  # #  #   #   #    #  ####  \n' + chalk.red(' ####### #####  #####') + '   #   #  #      #  # #   #   #    #      # \n' + chalk.red(' #     # #      #') + '        # #   #      #   ##   #   #    # #    # \n' + chalk.red(' #     # #      #') + '         #    ###### #    #   #    ####   ####');
-        this.log('\n Scaffolds a standard Symfony2 application with Yeoman and the Appventus Sauce\n\n Created by ' + chalk.red('@AppVentus ') + '\n ' + chalk.cyan('https://appventus.com/') + '\n');
     },
 
+    /**
+     * Ask the wanted version of Symfony for the project, install it, relocate
+     * it on terminal current folder (and not into the ./Symfony path)
+     */
     askSymfonyStandard: function () {
         var done = this.async();
 
@@ -98,6 +105,9 @@ module.exports = yeoman.generators.Base.extend({
         }
     },
 
+    /**
+     * Ask the equivalment of `Acme` to set bundle namespace
+     */
     askAppBundleName: function() {
         var done = this.async();
         var prompts = [{
@@ -113,6 +123,9 @@ module.exports = yeoman.generators.Base.extend({
         }.bind(this));
     },
 
+    /**
+     * Ask which presetted gui bricks will be auto implemented
+     */
     askGuiBricks: function() {
         var choices = [];
         for (var key in gui) {
@@ -145,6 +158,10 @@ module.exports = yeoman.generators.Base.extend({
         }.bind(this));
     },
 
+    /**
+     * Install Symfony, relocate it on terminal current folder (and not into the
+     * ./Symfony path)
+     */
     _unzip: function (archive, destination, opts, cb) {
         if (_.isFunction(opts) && !cb) {
             cb = opts;
@@ -199,6 +216,13 @@ module.exports = yeoman.generators.Base.extend({
         fs.move('./Symfony/', '.', function (err) {
             done();
         });
+
+        /// Rm the initial target of the dl
+        rmdir(directory, function (error) {
+            if (null === error) {
+                done();
+            }
+        });
     },
 
     symfonyWithAsseticInstalled: function () {
@@ -220,6 +244,10 @@ module.exports = yeoman.generators.Base.extend({
         }
     },
 
+    /**
+     * Check if bower is installed as a npm global package, if not it will be
+     * installed as a local project module.
+     */
     checkBower: function () {
         this.globalBower = false;
 
@@ -258,42 +286,44 @@ module.exports = yeoman.generators.Base.extend({
     },
 
     writing: {
-        removeSymfonyBase: function () {
-            var done = this.async();
-            var directory = this.destinationRoot() + '/Symfony';
-            rmdir(directory, function (error) {
-                if (null === error) {
-                    done();
-                }
-            });
+        /**
+         * Init all the files for the git workflow
+         */
+        gitWorkflow: function () {
+            this.template('_gitignore', '.gitignore');
         },
 
-        app: function () {
+        /**
+         * Init all the files for the IDEs & text editors workflow
+         */
+        ideWorkflow: function() {
+            this.template('editorconfig', '.editorconfig');
+        },
+
+        /**
+         * Init all the files for the front workflow
+         */
+        frontWorkflow: function() {
             this.fs.copyTpl(
                 this.templatePath('gulpfile.js'),
                 this.destinationPath('gulpfile.js'),
-                { app: this.appBundleName }
+                {
+                    app: this.appBundleName
+                }
             );
 
-            this.template('_gitignore', '.gitignore');
             this.template('bower.json', 'bower.json');
             this.template('_package.json', 'package.json');
             this.template('_scss-lint.yml', '.scss-lint.yml');
+            this.template('jshintrc', '.jshintrc');
         },
-
-        projectfiles: function () {
-            this.fs.copy(
-                this.templatePath('editorconfig'),
-                this.destinationPath('.editorconfig')
-            );
-            this.fs.copy(
-                this.templatePath('jshintrc'),
-                this.destinationPath('.jshintrc')
-            );
-        }
     },
 
-    end: {
+    install: {
+        /**
+         * Install via bower the gui bricks selected by the user and presetted
+         * into the app/gui.js module.
+         */
         installGuiBricks: function() {
             for (var key in gui) {
                 var component = gui[key];
@@ -310,55 +340,9 @@ module.exports = yeoman.generators.Base.extend({
             }
         },
 
-        cleanConfig: function () {
-            if (this.symfonyWithAssetic) {
-                var confDev = yaml.safeLoad(fs.readFileSync('app/config/config_dev.yml'));
-                delete confDev.assetic;
-                var newConfDev = yaml.dump(confDev, {indent: 4});
-                fs.writeFileSync('app/config/config_dev.yml', newConfDev);
-
-                var conf = yaml.safeLoad(fs.readFileSync('app/config/config.yml'));
-                delete conf.assetic;
-                var newConf = yaml.dump(conf, {indent: 4});
-                fs.writeFileSync('app/config/config.yml', newConf);
-            }
-        },
-
-        deleteAppBundle: function() {
-            this.spawnCommand('rm', ['-r', 'src/AppBundle']);
-            this.spawnCommand('rm', ['-r', 'app/Resources/views/default']);
-
-            var appKernelPath = 'app/AppKernel.php';
-            var appKernelContents = this.readFileAsString(appKernelPath);
-
-            var newAppKernelContents = appKernelContents.replace('new AppBundle\\AppBundle(),', '');
-            fs.writeFileSync(appKernelPath, newAppKernelContents);
-        },
-
-        updateAppKernel: function () {
-            if (this.symfonyWithAssetic) {
-                var appKernelPath = 'app/AppKernel.php';
-                var appKernelContents = this.readFileAsString(appKernelPath);
-
-                var newAppKernelContents = appKernelContents.replace('new Symfony\\Bundle\\AsseticBundle\\AsseticBundle(),', '');
-                fs.writeFileSync(appKernelPath, newAppKernelContents);
-            }
-        },
-
-        cleanComposer: function () {
-            if (this.symfonyWithAssetic) {
-                var removeAssetic = this.pathComposer + ' remove ' + 'symfony/assetic-bundle';
-
-                child_process.exec(removeAssetic, function (error, stdout, stderr) {
-                    if (error !== null) {
-                        console.log('exec error: ' + error);
-                    } else {
-                        console.log(chalk.green('[symfony/assetic-bundle] deleted!'));
-                    }
-                });
-            }
-        },
-
+        /**
+         * Install views layout
+         */
         installLayout: function () {
             this.fs.copyTpl(
                 this.templatePath('app/Resources/views/base.html.twig'),
@@ -370,6 +354,22 @@ module.exports = yeoman.generators.Base.extend({
             );
         },
 
+        /**
+         * Install new AppKernel based on which bundle has been generated
+         */
+        installAppKernel: function () {
+            if (this.symfonyWithAssetic) {
+                var appKernelPath = 'app/AppKernel.php';
+                var appKernelContents = this.readFileAsString(appKernelPath);
+
+                var newAppKernelContents = appKernelContents.replace('new Symfony\\Bundle\\AsseticBundle\\AsseticBundle(),', '');
+                fs.writeFileSync(appKernelPath, newAppKernelContents);
+            }
+        },
+
+        /**
+         * Install Acme\Front\TemplateBundle
+         */
         installFrontTemplate: function () {
             var generator = this;
             var bundlePath = 'src/' + generator.appBundleName + '/Front/TemplateBundle';
@@ -420,7 +420,54 @@ module.exports = yeoman.generators.Base.extend({
                 }
             );
         },
+    },
 
+    end: {
+        cleanConfig: function () {
+            if (this.symfonyWithAssetic) {
+                var confDev = yaml.safeLoad(fs.readFileSync('app/config/config_dev.yml'));
+                delete confDev.assetic;
+                var newConfDev = yaml.dump(confDev, {indent: 4});
+                fs.writeFileSync('app/config/config_dev.yml', newConfDev);
+
+                var conf = yaml.safeLoad(fs.readFileSync('app/config/config.yml'));
+                delete conf.assetic;
+                var newConf = yaml.dump(conf, {indent: 4});
+                fs.writeFileSync('app/config/config.yml', newConf);
+            }
+        },
+
+        deleteAppBundle: function() {
+            this.spawnCommand('rm', ['-r', 'src/AppBundle']);
+            this.spawnCommand('rm', ['-r', 'app/Resources/views/default']);
+
+            var appKernelPath = 'app/AppKernel.php';
+            var appKernelContents = this.readFileAsString(appKernelPath);
+
+            var newAppKernelContents = appKernelContents.replace('new AppBundle\\AppBundle(),', '');
+            fs.writeFileSync(appKernelPath, newAppKernelContents);
+        },
+
+        /**
+         * Remove Assetic if the Symfony's version is with it
+         */
+        cleanComposer: function () {
+            if (this.symfonyWithAssetic) {
+                var removeAssetic = this.pathComposer + ' remove ' + 'symfony/assetic-bundle';
+
+                child_process.exec(removeAssetic, function (error, stdout, stderr) {
+                    if (error !== null) {
+                        console.log('exec error: ' + error);
+                    } else {
+                        console.log(chalk.green('[symfony/assetic-bundle] deleted!'));
+                    }
+                });
+            }
+        },
+
+        /**
+         * Install new routing based on which bundle has been generated
+         */
         generateRouting: function() {
             this.spawnCommand('rm', ['-r', 'app/config/routing.yml']);
 
