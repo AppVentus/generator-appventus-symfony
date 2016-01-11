@@ -297,7 +297,7 @@ module.exports = yeoman.generators.Base.extend({
          * Init all the files for the IDEs & text editors workflow
          */
         ideWorkflow: function() {
-            this.template('editorconfig', '.editorconfig');
+            this.template('_editorconfig', '.editorconfig');
         },
 
         /**
@@ -313,9 +313,9 @@ module.exports = yeoman.generators.Base.extend({
             );
 
             this.template('bower.json', 'bower.json');
-            this.template('_package.json', 'package.json');
+            this.template('package.json', 'package.json');
             this.template('_scss-lint.yml', '.scss-lint.yml');
-            this.template('jshintrc', '.jshintrc');
+            this.template('_jshintrc', '.jshintrc');
         },
     },
 
