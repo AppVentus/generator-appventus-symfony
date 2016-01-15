@@ -13,15 +13,17 @@
         "cc": "php app/console ca:cl",
         "dsu": "php app/console doctrine:schema:update --force",
         "assets": "php app/console assets:install web",
-        "make-dev": "npm run getcomposer && php composer.phar install && npm install && bower install && npm run dsu && npm run assets && gulp styles",
-        "start-dev": "npm run assets && gulp watch"
+        "inject": "npm run assets && gulp injector",
+        "make-dev": "npm run getcomposer && php composer.phar install && npm install && bower install && npm run dsu && npm run assets && gulp injector-style && gulp styles && gulp injector",
+        "start": "npm run assets && gulp injector-style && gulp watch"
     },
     "devDependencies": {
+        "av-gulp-injector": "^1.0.3",
         "gulp": "^3.9.0",
         "gulp-autoprefixer": "^3.1.0",
         "gulp-load-plugins": "^1.1.0",
         "gulp-sass": "^2.1.0",
-        "gulp-sourcemaps": "^1.6.0",
-        "gulp-size": "^2.0.0"
+        "gulp-size": "^2.0.0",
+        "gulp-sourcemaps": "^1.6.0"
     }
 }

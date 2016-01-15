@@ -2,5 +2,7 @@
 
 {% block body %}
     <h1 class="container">Guidelines for User Interface <%= app %></h1>
-    <% gui.forEach(function(component){ %><% if (component.include && component.gui) { %>{% include "@bower/<%= component.bower %>/<%= component.gui %>" %}<% } %><% }); %>
+
+    <!-- gui:twig -->
+    <!-- endinject -->
 {% endblock body %}

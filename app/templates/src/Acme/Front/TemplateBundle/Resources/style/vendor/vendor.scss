@@ -1,3 +1,7 @@
-<% gui.forEach(function(component){ %>
-    <% if (component.include && component.scss) { %>@import '../../public/bower_components/<%= component.bower %>/<%= component.scss %>';<% } %>
-<% }); %>
+// scss-lint:disable ImportPath, Comment
+
+/* stylevendor:scss */
+/* endinject */
+
+/* stylevendor:css */
+/* endinject */

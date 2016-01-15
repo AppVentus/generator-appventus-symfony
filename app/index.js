@@ -312,6 +312,14 @@ module.exports = yeoman.generators.Base.extend({
                 }
             );
 
+            this.fs.copyTpl(
+                this.templatePath('gulp.injector.aliases.js'),
+                this.destinationPath('gulp.injector.aliases.js'),
+                {
+                    app: this.appBundleName
+                }
+            );
+
             this.template('bower.json', 'bower.json');
             this.template('package.json', 'package.json');
             this.template('_scss-lint.yml', '.scss-lint.yml');
