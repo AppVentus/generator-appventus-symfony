@@ -159,6 +159,26 @@ module.exports = yeoman.generators.Base.extend({
     },
 
     /**
+     * Ask if we generate an Acme/Front/AppBundle
+     */
+    askAcmeFrontAppBundle: function() {
+        var done = this.async();
+
+        var prompts = [{
+            type: 'confirm',
+            name: 'frontAppBundle',
+            message: 'Would you like to generate a Front/AppBundle ?',
+            default: true
+        }];
+
+        this.prompt(prompts, function (answers) {
+            this.frontAppBundle = answers.frontAppBundle;
+            done();
+        }.bind(this));
+    },
+
+
+    /**
      * Install Symfony, relocate it on terminal current folder (and not into the
      * ./Symfony path)
      */
@@ -430,6 +450,18 @@ module.exports = yeoman.generators.Base.extend({
                 }
             );
         },
+
+        /**
+         * Install Acme\Front\TemplateBundle
+         */
+        installFrontAppBundle: function() {
+            if (this.frontAppBundle) {
+                var generator = this;
+                var bundlePath = 'src/' + generator.appBundleName + '/Front/AppBundle';
+                var ls = this.spawnCommand('php', ['app/console', 'generate:bundle', '--namespace=' + this.appBundleName + '/Front/AppBundle', '--bundle-name=' + this.appBundleName + 'AppTemplateBundle', '--no-interaction']);
+            }
+        }
+
     },
 
     end: {
