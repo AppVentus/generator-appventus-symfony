@@ -10,7 +10,13 @@ var request = require('request');
 var _ = require('lodash');
 var Download = require('download');
 var mkdirp = require('mkdirp');
+var GitHubApi = require('github');
+var Queue = require('grouped-queue');
+
 var gui = require('./gui')();
+var composerGlobal = require('./composer.global.js')();
+var composerGlobalDev = require('./composer.global.dev.js')();
+var composerVictoire = require('./composer.victoire.js')();
 
 module.exports = yeoman.generators.Base.extend({
     initializing: function () {
@@ -23,6 +29,27 @@ module.exports = yeoman.generators.Base.extend({
         this.pkg = require('../package.json');
         this.conflicter.force = true;
         this.gui = gui;
+        this.victoireWidgets = [];
+
+        this.bundles = [
+            'new Bazinga\\Bundle\\JsTranslationBundle\\BazingaJsTranslationBundle()',
+            'new FOS\\UserBundle\\FOSUserBundle()',
+            'new FOS\\JsRoutingBundle\\FOSJsRoutingBundle()',
+            'new Ivory\\CKEditorBundle\\IvoryCKEditorBundle()',
+            'new JMS\\AopBundle\\JMSAopBundle()',
+            'new JMS\\DiExtraBundle\\JMSDiExtraBundle($this)',
+            'new JMS\\I18nRoutingBundle\\JMSI18nRoutingBundle()',
+            'new JMS\\SecurityExtraBundle\\JMSSecurityExtraBundle()',
+            'new JMS\\TranslationBundle\\JMSTranslationBundle()',
+            'new Knp\\Bundle\\MenuBundle\\KnpMenuBundle()',
+            'new Lexik\\Bundle\\FormFilterBundle\\LexikFormFilterBundle()',
+            'new Liip\\ImagineBundle\\LiipImagineBundle()',
+            'new Mopa\\Bundle\\BootstrapBundle\\MopaBootstrapBundle()',
+            'new Stof\\DoctrineExtensionsBundle\\StofDoctrineExtensionsBundle()',
+            'new WhiteOctober\\SwiftMailerDBBundle\\WhiteOctoberSwiftMailerDBBundle()',
+        ];
+        // admin: "sg/datatablesbundle": "dev-master"
+
     },
 
     /**
@@ -177,6 +204,83 @@ module.exports = yeoman.generators.Base.extend({
         }.bind(this));
     },
 
+    askVictoire: function() {
+        var done = this.async();
+
+        var prompts = [{
+            type: 'confirm',
+            name: 'victoire',
+            message: 'Would you like to implement Victoire',
+            default: true
+        }];
+
+        this.prompt(prompts, function (answers) {
+            this.victoire = answers.victoire;
+
+            this.bundles.concat([
+                'new Victoire\\Bundle\\AnalyticsBundle\\VictoireAnalyticsBundle()',
+                'new Victoire\\Bundle\\CoreBundle\\VictoireCoreBundle()',
+                'new Victoire\\Bundle\\TwigBundle\\VictoireTwigBundle()',
+                'new Victoire\\Bundle\\BlogBundle\\VictoireBlogBundle()',
+                'new Victoire\\Bundle\\BusinessEntityBundle\\VictoireBusinessEntityBundle()',
+                'new Victoire\\Bundle\\BusinessPageBundle\\VictoireBusinessPageBundle()',
+                'new Victoire\\Bundle\\FilterBundle\\VictoireFilterBundle()',
+                'new Victoire\\Bundle\\FormBundle\\VictoireFormBundle()',
+                'new Victoire\\Bundle\\I18nBundle\\VictoireI18nBundle()',
+                'new Victoire\\Bundle\\PageBundle\\VictoirePageBundle()',
+                'new Victoire\\Bundle\\QueryBundle\\VictoireQueryBundle()',
+                'new Victoire\\Bundle\\MediaBundle\\VictoireMediaBundle()',
+                'new Victoire\\Bundle\\SeoBundle\\VictoireSeoBundle()',
+                'new Victoire\\Bundle\\SitemapBundle\\VictoireSitemapBundle()',
+                'new Victoire\\Bundle\\TemplateBundle\\VictoireTemplateBundle()',
+                'new Victoire\\Bundle\\UserBundle\\VictoireUserBundle()',
+                'new Victoire\\Bundle\\WidgetBundle\\VictoireWidgetBundle()',
+                'new Victoire\\Bundle\\WidgetMapBundle\\VictoireWidgetMapBundle()',
+                'new Victoire\\Bundle\\ViewReferenceBundle\\ViewReferenceBundle()',
+            ]);
+
+            done();
+        }.bind(this));
+    },
+
+    askVictoireWidget: function() {
+        if (!this.victoire) {
+            return true;
+        }
+
+        var done = this.async();
+
+        request('https://packagist.org/search.json?tags=friendsofvictoire&type=symfony-bundle&per_page=50', function (error, response, body) {
+            var victoireWidgetsJSON = JSON.parse(response.body).results;
+
+            var choices = [];
+            for (var key in victoireWidgetsJSON) {
+                var widget = victoireWidgetsJSON[key];
+
+                // Regex test in order to not display the victoire/victoire repo
+                if (widget.name.match(new RegExp('-widget$'))) {
+                    var choice = choices.push({
+                        name: widget.name,
+                        value: widget.name,
+                        checked: true
+                    });
+                }
+            }
+
+            var prompts = [{
+                type: 'checkbox',
+                name: 'victoireWidgets',
+                message: 'Which widgets would you like to implement ?',
+                choices: choices
+            }];
+
+            this.widget = [];
+            this.prompt(prompts, function (answers) {
+                this.victoireWidgets = answers.victoireWidgets;
+                done();
+            }.bind(this));
+        }.bind(this));
+    },
 
     /**
      * Install Symfony, relocate it on terminal current folder (and not into the
@@ -252,16 +356,14 @@ module.exports = yeoman.generators.Base.extend({
     },
 
     installComposer: function () {
-        if (this.symfonyWithAssetic) {
-            var done = this.async();
-            this.pathComposer = 'php ./composer.phar';
-            child_process.exec('php -r "readfile(\'https://getcomposer.org/installer\');" | php', function (error, stdout, stderr) {
-                console.log(chalk.green('Installing composer locally.'));
-                console.log('See ' + chalk.yellow('http://getcomposer.org')  + ' for more details on composer.');
-                console.log('');
-                done();
-            });
-        }
+        var done = this.async();
+        this.pathComposer = 'php ./composer.phar';
+        child_process.exec('php -r "readfile(\'https://getcomposer.org/installer\');" | php', function (error, stdout, stderr) {
+            console.log(chalk.green('Installing composer locally.'));
+            console.log('See ' + chalk.yellow('http://getcomposer.org')  + ' for more details on composer.');
+            console.log('');
+            done();
+        });
     },
 
     /**
@@ -388,19 +490,20 @@ module.exports = yeoman.generators.Base.extend({
          * Install new AppKernel based on which bundle has been generated
          */
         installAppKernel: function () {
-            if (this.symfonyWithAssetic) {
-                var appKernelPath = 'app/AppKernel.php';
-                var appKernelContents = this.readFileAsString(appKernelPath);
-
-                var newAppKernelContents = appKernelContents.replace('new Symfony\\Bundle\\AsseticBundle\\AsseticBundle(),', '');
-                fs.writeFileSync(appKernelPath, newAppKernelContents);
-            }
+            // if (this.symfonyWithAssetic) {
+            //     var appKernelPath = 'app/AppKernel.php';
+            //     var appKernelContents = this.readFileAsString(appKernelPath);
+            //
+            //     var newAppKernelContents = appKernelContents.replace('new Symfony\\Bundle\\AsseticBundle\\AsseticBundle(),', '');
+            //     fs.writeFileSync(appKernelPath, newAppKernelContents);
+            // }
         },
 
         /**
          * Install Acme\Front\TemplateBundle
          */
         installFrontTemplate: function () {
+            var done = this.async();
             var generator = this;
             var bundlePath = 'src/' + generator.appBundleName + '/Front/TemplateBundle';
             var ls = this.spawnCommand('php', ['app/console', 'generate:bundle', '--namespace=' + this.appBundleName + '/Front/TemplateBundle', '--bundle-name=' + this.appBundleName + 'FrontTemplateBundle', '--no-interaction']);
@@ -439,6 +542,8 @@ module.exports = yeoman.generators.Base.extend({
                     generator.destinationPath('.bowerrc'),
                     { app: generator.appBundleName }
                 );
+
+                done();
             });
 
             this.fs.copyTpl(
@@ -455,28 +560,83 @@ module.exports = yeoman.generators.Base.extend({
          * Install Acme\Front\TemplateBundle
          */
         installFrontAppBundle: function() {
+            var done = this.async();
             if (this.frontAppBundle) {
                 var generator = this;
                 var bundlePath = 'src/' + generator.appBundleName + '/Front/AppBundle';
                 var ls = this.spawnCommand('php', ['app/console', 'generate:bundle', '--namespace=' + this.appBundleName + '/Front/AppBundle', '--bundle-name=' + this.appBundleName + 'AppTemplateBundle', '--no-interaction']);
+
+                ls.on('close', function (code) {
+                    done();
+                }.bind(this));
             }
-        }
+        },
 
     },
 
     end: {
-        cleanConfig: function () {
-            if (this.symfonyWithAssetic) {
-                var confDev = yaml.safeLoad(fs.readFileSync('app/config/config_dev.yml'));
-                delete confDev.assetic;
-                var newConfDev = yaml.dump(confDev, {indent: 4});
-                fs.writeFileSync('app/config/config_dev.yml', newConfDev);
+        installComposerVendors: function() {
+            var done = this.async();
 
-                var conf = yaml.safeLoad(fs.readFileSync('app/config/config.yml'));
-                delete conf.assetic;
-                var newConf = yaml.dump(conf, {indent: 4});
-                fs.writeFileSync('app/config/config.yml', newConf);
+            var composerJsonPath = 'composer.json';
+            var composerJson = JSON.parse(this.readFileAsString(composerJsonPath));
+            composerJson['minimum-stability'] = 'dev';
+            composerJson.config.platform.php = '5.5.9';
+
+            /**
+             * Merge of victoire requirements to the composerJson
+             */
+            if (this.victoire) {
+                for (var key in composerVictoire) {
+                    composerGlobal[key] = composerVictoire[key];
+                }
             }
+
+            composerJson.require = composerGlobal;
+            composerJson['require-dev'] = composerGlobalDev;
+
+
+            fs.writeFile('composer.json', JSON.stringify(composerJson, null, 4), 'utf8', function() {
+                var composerUpdate = this.spawnCommand('composer', ['update']);
+
+                composerUpdate.on('close', function (code) {
+                    this.spawnCommand('composer', ['require'].concat(this.victoireWidgets));
+                    done();
+                }.bind(this));
+            }.bind(this));
+        },
+
+        registerBundles: function() {
+            var appKernelPath = 'app/AppKernel.php';
+            var appKernelContents = this.readFileAsString(appKernelPath);
+
+            var bundlesDeclarations = '';
+            for (var key in this.bundles) {
+                var bundle = this.bundles[key];
+                bundlesDeclarations += '        $bundles[] = ' + bundle + ';\n';
+            }
+            bundlesDeclarations = bundlesDeclarations + 'return $bundles;';
+
+            var newAppKernelContents = appKernelContents.replace('return $bundles;', bundlesDeclarations);
+            fs.writeFileSync(appKernelPath, newAppKernelContents);
+        },
+
+        cleanConfig: function () {
+            /**
+             * While the assetic injector transition is not complete with our
+             * bundles, we still need assetic
+             */
+            // if (this.symfonyWithAssetic) {
+            //     var confDev = yaml.safeLoad(fs.readFileSync('app/config/config_dev.yml'));
+            //     delete confDev.assetic;
+            //     var newConfDev = yaml.dump(confDev, {indent: 4});
+            //     fs.writeFileSync('app/config/config_dev.yml', newConfDev);
+            //
+            //     var conf = yaml.safeLoad(fs.readFileSync('app/config/config.yml'));
+            //     delete conf.assetic;
+            //     var newConf = yaml.dump(conf, {indent: 4});
+            //     fs.writeFileSync('app/config/config.yml', newConf);
+            // }
         },
 
         deleteAppBundle: function() {
@@ -494,17 +654,17 @@ module.exports = yeoman.generators.Base.extend({
          * Remove Assetic if the Symfony's version is with it
          */
         cleanComposer: function () {
-            if (this.symfonyWithAssetic) {
-                var removeAssetic = this.pathComposer + ' remove ' + 'symfony/assetic-bundle';
-
-                child_process.exec(removeAssetic, function (error, stdout, stderr) {
-                    if (error !== null) {
-                        console.log('exec error: ' + error);
-                    } else {
-                        console.log(chalk.green('[symfony/assetic-bundle] deleted!'));
-                    }
-                });
-            }
+            // if (this.symfonyWithAssetic) {
+            //     var removeAssetic = this.pathComposer + ' remove ' + 'symfony/assetic-bundle';
+            //
+            //     child_process.exec(removeAssetic, function (error, stdout, stderr) {
+            //         if (error !== null) {
+            //             console.log('exec error: ' + error);
+            //         } else {
+            //             console.log(chalk.green('[symfony/assetic-bundle] deleted!'));
+            //         }
+            //     });
+            // }
         },
 
         /**
