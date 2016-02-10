@@ -2,7 +2,7 @@
 module.exports = function() {
     var composer = {
         'php'                                       : '>=5.3.3',
-        'symfony/symfony'                           : '2.6.*',
+        'symfony/symfony'                           : '2.7.*',
         'doctrine/orm'                              : '~2.2,>=2.2.3',
         'doctrine/doctrine-bundle'                  : '~1.2',
         'twig/extensions'                           : '~1.0',
@@ -18,11 +18,9 @@ module.exports = function() {
         'appventus/alertify-bundle'                 : 'dev-master',
         'appventus/auto-form-fill-bundle'           : 'dev-master',
         'appventus/aviary-bundle'                   : 'dev-master',
-        'appventus/avlist-bundle'                   : 'dev-master',
         'appventus/swiftmailerdbbundle'             : 'dev-master',
         'appventus/spoolmailerbundle'               : 'dev-master',
         'appventus/shortcuts-bundle'                : 'dev-master',
-        'appventus/datamigration-bundle'            : 'dev-master',
         'doctrine/doctrine-fixtures-bundle'         : 'dev-master',
         'doctrine/data-fixtures'                    : 'dev-master',
         'friendsofsymfony/user-bundle'              : '2.0.*dev',
@@ -43,7 +41,6 @@ module.exports = function() {
         'twbs/bootstrap'                            : '3.3.x-dev',
         'white-october/pagerfanta-bundle'           : '1.0.*@dev',
         'beberlei/doctrineextensions'               : '1.0.x-dev',
-        'hwi/oauth-bundle'                          : '0.4.*@dev',
         'vlabs/media-bundle'                        : 'dev-master',
         'imagine/imagine'                           : 'v0.5.0',
         'appventus/ossus-bundle'                    : 'dev-master',

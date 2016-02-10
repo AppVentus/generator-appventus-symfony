@@ -12,6 +12,7 @@ var Download = require('download');
 var mkdirp = require('mkdirp');
 var GitHubApi = require('github');
 var Queue = require('grouped-queue');
+var akInjection = require('appkernel-injection');
 
 var gui = require('./gui')();
 var composerGlobal = require('./composer.global.js')();
@@ -19,6 +20,7 @@ var composerGlobalDev = require('./composer.global.dev.js')();
 var composerVictoire = require('./composer.victoire.js')();
 
 module.exports = yeoman.generators.Base.extend({
+
     initializing: function () {
         /**
          * Ascii introduction
@@ -597,28 +599,54 @@ module.exports = yeoman.generators.Base.extend({
 
 
             fs.writeFile('composer.json', JSON.stringify(composerJson, null, 4), 'utf8', function() {
-                var composerUpdate = this.spawnCommand('composer', ['update']);
+                var composerUpdate = this.spawnCommand('composer', ['update', '--with-dependencies']);
 
                 composerUpdate.on('close', function (code) {
                     this.spawnCommand('composer', ['require'].concat(this.victoireWidgets));
+                    var composerVictoire = this.spawnCommand('composer', ['require'].concat(this.victoireWidgets));
+                    composerVictoire.on('close', function (code) {
+                        akInjection();
+                        done();
+                    });
+
                     done();
                 }.bind(this));
             }.bind(this));
+            done();
         },
 
         registerBundles: function() {
+            console.log(chalk.green('REGISTER BUNDLES'));
+            var done = this.async();
+
             var appKernelPath = 'app/AppKernel.php';
             var appKernelContents = this.readFileAsString(appKernelPath);
 
-            var bundlesDeclarations = '';
-            for (var key in this.bundles) {
-                var bundle = this.bundles[key];
-                bundlesDeclarations += '        $bundles[] = ' + bundle + ';\n';
-            }
-            bundlesDeclarations = bundlesDeclarations + 'return $bundles;';
+            // var bundlesDeclarations = '';
+            // for (var key in this.bundles) {
+            //     var bundle = this.bundles[key];
+            //     bundlesDeclarations += '        $bundles[] = ' + bundle + ';\n';
+            // }
+            // bundlesDeclarations = bundlesDeclarations + 'return $bundles;';
 
-            var newAppKernelContents = appKernelContents.replace('return $bundles;', bundlesDeclarations);
-            fs.writeFileSync(appKernelPath, newAppKernelContents);
+            // var newAppKernelContents = appKernelContents.replace('return $bundles;', bundlesDeclarations);
+            // fs.writeFileSync(appKernelPath, newAppKernelContents);
+
+            var preflag = {
+                prod: 'new Sensio\\Bundle\\FrameworkExtraBundle\\SensioFrameworkExtraBundle(),\n',
+                dev: '$bundles[] = new Sensio\\Bundle\\GeneratorBundle\\SensioGeneratorBundle();\n',
+            };
+
+            var flag = {
+                prod: '\n            // Automatic AppKernel:prod injection\n',
+                dev: '\n            // Automatic AppKernel:dev injection\n'
+            };
+
+            var newAppKernelContents = appKernelContents.replace(preflag.prod, flag.prod).replace(preflag.dev, flag.dev);
+            fs.writeFile(appKernelPath, newAppKernelContents, function() {
+                akInjection();
+                done();
+            });
         },
 
         cleanConfig: function () {
