@@ -47,8 +47,6 @@ module.exports = yeoman.generators.Base.extend({
             'new Stof\\DoctrineExtensionsBundle\\StofDoctrineExtensionsBundle()',
             'new WhiteOctober\\SwiftMailerDBBundle\\WhiteOctoberSwiftMailerDBBundle()',
         ];
-        // admin: "sg/datatablesbundle": "dev-master"
-
     },
 
     /**
