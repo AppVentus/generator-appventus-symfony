@@ -13,11 +13,8 @@ var mkdirp = require('mkdirp');
 var GitHubApi = require('github');
 var Queue = require('grouped-queue');
 var akInjection = require('appkernel-injection');
-
 var gui = require('./gui')();
-var composerGlobal = require('./composer.global.js')();
-var composerGlobalDev = require('./composer.global.dev.js')();
-var composerVictoire = require('./composer.victoire.js')();
+var composer = require('./composer.js')();
 
 module.exports = yeoman.generators.Base.extend({
 
@@ -589,13 +586,13 @@ module.exports = yeoman.generators.Base.extend({
              * Merge of victoire requirements to the composerJson
              */
             if (this.victoire) {
-                for (var key in composerVictoire) {
-                    composerGlobal[key] = composerVictoire[key];
+                for (var key in composer.victoire) {
+                    composer.global[key] = composer.victoire[key];
                 }
             }
 
-            composerJson.require = composerGlobal;
-            composerJson['require-dev'] = composerGlobalDev;
+            composerJson.require = composer.global;
+            composerJson['require-dev'] = composer.dev;
 
 
             fs.writeFile('composer.json', JSON.stringify(composerJson, null, 4), 'utf8', function() {
