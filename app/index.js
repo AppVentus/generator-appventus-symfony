@@ -610,22 +610,17 @@ module.exports = yeoman.generators.Base.extend({
             done();
         },
 
+        /**
+         * Automatic registration of all the bundles downloaded previously by
+         * composer.
+         * (1) We add into the appKernel some comments called 'flag'required
+         *     by akInjection
+         * (2) We run akInjection that will automaticaly include bundle
+         *     declaration into the appKernel
+         */
         registerBundles: function() {
             console.log(chalk.green('REGISTER BUNDLES'));
             var done = this.async();
-
-            var appKernelPath = 'app/AppKernel.php';
-            var appKernelContents = this.readFileAsString(appKernelPath);
-
-            // var bundlesDeclarations = '';
-            // for (var key in this.bundles) {
-            //     var bundle = this.bundles[key];
-            //     bundlesDeclarations += '        $bundles[] = ' + bundle + ';\n';
-            // }
-            // bundlesDeclarations = bundlesDeclarations + 'return $bundles;';
-
-            // var newAppKernelContents = appKernelContents.replace('return $bundles;', bundlesDeclarations);
-            // fs.writeFileSync(appKernelPath, newAppKernelContents);
 
             var preflag = {
                 prod: 'new Sensio\\Bundle\\FrameworkExtraBundle\\SensioFrameworkExtraBundle(),\n',
@@ -637,8 +632,12 @@ module.exports = yeoman.generators.Base.extend({
                 dev: '\n            // Automatic AppKernel:dev injection\n'
             };
 
+            // (1)
+            var appKernelPath = 'app/AppKernel.php';
+            var appKernelContents = this.readFileAsString(appKernelPath);
             var newAppKernelContents = appKernelContents.replace(preflag.prod, flag.prod).replace(preflag.dev, flag.dev);
             fs.writeFile(appKernelPath, newAppKernelContents, function() {
+                // (2)
                 akInjection();
                 done();
             });
