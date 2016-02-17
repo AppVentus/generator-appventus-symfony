@@ -17,11 +17,7 @@ var gui = require('./gui')();
 var composer = require('./composer.js')();
 
 module.exports = yeoman.generators.Base.extend({
-
     initializing: function () {
-        /**
-         * Ascii introduction
-         */
         this.log(chalk.red('\n    #') + '                  #     #                                   \n' + chalk.red('   # #   #####  #####') + '  #     # ###### #    # ##### #    #  ####  \n' + chalk.red('  #   #  #    # #    #') + ' #     # #      ##   #   #   #    # #      \n' + chalk.red(' #     # #    # #    #') + ' #     # #####  # #  #   #   #    #  ####  \n' + chalk.red(' ####### #####  #####') + '   #   #  #      #  # #   #   #    #      # \n' + chalk.red(' #     # #      #') + '        # #   #      #   ##   #   #    # #    # \n' + chalk.red(' #     # #      #') + '         #    ###### #    #   #    ####   ####');
         this.log('\n Scaffolds a standard Symfony2 application with Yeoman and the Appventus Sauce\n\n Created by ' + chalk.red('@AppVentus ') + '\n ' + chalk.cyan('https://appventus.com/') + '\n');
 
@@ -29,24 +25,6 @@ module.exports = yeoman.generators.Base.extend({
         this.conflicter.force = true;
         this.gui = gui;
         this.victoireWidgets = [];
-
-        this.bundles = [
-            'new Bazinga\\Bundle\\JsTranslationBundle\\BazingaJsTranslationBundle()',
-            'new FOS\\UserBundle\\FOSUserBundle()',
-            'new FOS\\JsRoutingBundle\\FOSJsRoutingBundle()',
-            'new Ivory\\CKEditorBundle\\IvoryCKEditorBundle()',
-            'new JMS\\AopBundle\\JMSAopBundle()',
-            'new JMS\\DiExtraBundle\\JMSDiExtraBundle($this)',
-            'new JMS\\I18nRoutingBundle\\JMSI18nRoutingBundle()',
-            'new JMS\\SecurityExtraBundle\\JMSSecurityExtraBundle()',
-            'new JMS\\TranslationBundle\\JMSTranslationBundle()',
-            'new Knp\\Bundle\\MenuBundle\\KnpMenuBundle()',
-            'new Lexik\\Bundle\\FormFilterBundle\\LexikFormFilterBundle()',
-            'new Liip\\ImagineBundle\\LiipImagineBundle()',
-            'new Mopa\\Bundle\\BootstrapBundle\\MopaBootstrapBundle()',
-            'new Stof\\DoctrineExtensionsBundle\\StofDoctrineExtensionsBundle()',
-            'new WhiteOctober\\SwiftMailerDBBundle\\WhiteOctoberSwiftMailerDBBundle()',
-        ];
     },
 
     /**
@@ -213,29 +191,6 @@ module.exports = yeoman.generators.Base.extend({
 
         this.prompt(prompts, function (answers) {
             this.victoire = answers.victoire;
-
-            this.bundles.concat([
-                'new Victoire\\Bundle\\AnalyticsBundle\\VictoireAnalyticsBundle()',
-                'new Victoire\\Bundle\\CoreBundle\\VictoireCoreBundle()',
-                'new Victoire\\Bundle\\TwigBundle\\VictoireTwigBundle()',
-                'new Victoire\\Bundle\\BlogBundle\\VictoireBlogBundle()',
-                'new Victoire\\Bundle\\BusinessEntityBundle\\VictoireBusinessEntityBundle()',
-                'new Victoire\\Bundle\\BusinessPageBundle\\VictoireBusinessPageBundle()',
-                'new Victoire\\Bundle\\FilterBundle\\VictoireFilterBundle()',
-                'new Victoire\\Bundle\\FormBundle\\VictoireFormBundle()',
-                'new Victoire\\Bundle\\I18nBundle\\VictoireI18nBundle()',
-                'new Victoire\\Bundle\\PageBundle\\VictoirePageBundle()',
-                'new Victoire\\Bundle\\QueryBundle\\VictoireQueryBundle()',
-                'new Victoire\\Bundle\\MediaBundle\\VictoireMediaBundle()',
-                'new Victoire\\Bundle\\SeoBundle\\VictoireSeoBundle()',
-                'new Victoire\\Bundle\\SitemapBundle\\VictoireSitemapBundle()',
-                'new Victoire\\Bundle\\TemplateBundle\\VictoireTemplateBundle()',
-                'new Victoire\\Bundle\\UserBundle\\VictoireUserBundle()',
-                'new Victoire\\Bundle\\WidgetBundle\\VictoireWidgetBundle()',
-                'new Victoire\\Bundle\\WidgetMapBundle\\VictoireWidgetMapBundle()',
-                'new Victoire\\Bundle\\ViewReferenceBundle\\ViewReferenceBundle()',
-            ]);
-
             done();
         }.bind(this));
     },
