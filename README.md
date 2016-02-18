@@ -32,5 +32,6 @@ Mandatory dependencies :
 This is still a work in progress, if you want to help, you can follow the steps below to make it work locally
 - Install globally yeoman : `npm install -g yo`
 - Clone the project : `git clone https://github.com/AppVentus/generator-appventus-symfony`
+- Install the dependencies: `npm install`
 - Link to npm (from the root of your project): `npm link`
 - Run: `yo appventus-symfony`
