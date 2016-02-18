@@ -1,6 +1,8 @@
 /* jshint strict: false */
 var gulp = require('gulp');
 var $ = require('gulp-load-plugins')();
+var avInjector = require('av-gulp-injector');
+var avInjectorAliases = require('./gulp.injector.aliases')();
 
 var AUTOPREFIXER_BROWSERS = [
     'ie >= 10',
@@ -32,4 +34,14 @@ gulp.task('styles', function () {
 // Watch files for changes
 gulp.task('watch', ['styles'], function () {
     gulp.watch(['**/*.scss', '**/*.css'], ['styles']);
+});
+
+// Inject assets referenced into the injector.json files
+gulp.task('injector', function() {
+    avInjector.injector(gulp.src('app/Resources/views/**/*.html.twig'), avInjectorAliases);
+});
+
+// Injector variant for style injection
+gulp.task('injector-style', function() {
+    avInjector.injector(gulp.src('src/<%= app %>/Front/TemplateBundle/Resources/style/vendor/vendor.scss'), avInjectorAliases, true);
 });

@@ -5,14 +5,15 @@
         <title>{% block title %}<%= app %>{% endblock %}</title>
 
         {% block stylesheets %}
-            <link rel="stylesheet" href="{{ asset('css/main.css') }}">
+            <!-- head:css -->
+            <!-- endinject -->
         {% endblock %}
 
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
 
         {% block javascripts_top %}
-            <% gui.forEach(function(component) { %><% if (component.include && component.bowerRequirement.js && component.bowerRequirement.js.top) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/<%= component.bowerRequirement.js.top %>') }}"></script><% } %><% }); %>
-            <% gui.forEach(function(component) { %><% if (component.include && component.js && component.js.top) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/<%= component.bower %>/<%= component.js.top %>') }}"></script><% } %><% }); %>
+            <!-- head:js -->
+            <!-- endinject -->
         {% endblock %}
     </head>
 
@@ -20,8 +21,8 @@
         {% block body %}{% endblock %}
 
         {% block javascripts_bottom %}
-            <% gui.forEach(function(component) { %><% if (component.include && component.bowerRequirement.js && component.bowerRequirement.js.bottom) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/<%= component.bowerRequirement.js.bottom %>') }}"></script><% } %><% }); %>
-            <% gui.forEach(function(component) { %><% if (component.include && component.js && component.js.bottom) { %><script src="{{ asset('bundles/<%= app %>fronttemplate/bower_components/<%= component.bower %>/<%= component.js.bottom %>') }}"></script><% } %><% }); %>
+            <!-- foot:js -->
+            <!-- endinject -->
         {% endblock %}
     </body>
 </html>

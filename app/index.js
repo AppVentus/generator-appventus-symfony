@@ -10,24 +10,25 @@ var request = require('request');
 var _ = require('lodash');
 var Download = require('download');
 var mkdirp = require('mkdirp');
+var GitHubApi = require('github');
+var Queue = require('grouped-queue');
+var akInjection = require('appkernel-injection');
 var gui = require('./gui')();
+var composer = require('./composer.js')();
 
 module.exports = yeoman.generators.Base.extend({
     initializing: function () {
-        /**
-         * Ascii introduction
-         */
         this.log(chalk.red('\n    #') + '                  #     #                                   \n' + chalk.red('   # #   #####  #####') + '  #     # ###### #    # ##### #    #  ####  \n' + chalk.red('  #   #  #    # #    #') + ' #     # #      ##   #   #   #    # #      \n' + chalk.red(' #     # #    # #    #') + ' #     # #####  # #  #   #   #    #  ####  \n' + chalk.red(' ####### #####  #####') + '   #   #  #      #  # #   #   #    #      # \n' + chalk.red(' #     # #      #') + '        # #   #      #   ##   #   #    # #    # \n' + chalk.red(' #     # #      #') + '         #    ###### #    #   #    ####   ####');
         this.log('\n Scaffolds a standard Symfony2 application with Yeoman and the Appventus Sauce\n\n Created by ' + chalk.red('@AppVentus ') + '\n ' + chalk.cyan('https://appventus.com/') + '\n');
 
         this.pkg = require('../package.json');
         this.conflicter.force = true;
         this.gui = gui;
+        this.victoireWidgets = [];
     },
 
     /**
-     * Ask the wanted version of Symfony for the project, install it, relocate
-     * it on terminal current folder (and not into the ./Symfony path)
+     * Ask if the developer want the standard version of symfony
      */
     askSymfonyStandard: function () {
         var done = this.async();
@@ -55,6 +56,9 @@ module.exports = yeoman.generators.Base.extend({
         }.bind(this));
     },
 
+    /**
+     * Go get all the version of symfony available
+     */
     getTagSymfony: function () {
         var done = this.async();
         var invalidEntries = 0;
@@ -80,6 +84,10 @@ module.exports = yeoman.generators.Base.extend({
         }.bind(this));
     },
 
+    /**
+     * Ask which version is wanted by the developer if the standard version was
+     * not selected
+     */
     askSymfonyCustom: function () {
         if (this.symfonyDistribution === null) {
             var done = this.async();
@@ -127,6 +135,8 @@ module.exports = yeoman.generators.Base.extend({
      * Ask which presetted gui bricks will be auto implemented
      */
     askGuiBricks: function() {
+        var done = this.async();
+
         var choices = [];
         for (var key in gui) {
             var component = gui[key];
@@ -137,15 +147,12 @@ module.exports = yeoman.generators.Base.extend({
             });
         }
 
-        var done = this.async();
-        var prompts = [{
+        this.prompt({
             type: 'checkbox',
             name: 'guiBricks',
             message: 'Which bricks do you want to include ?',
             choices: choices
-        }];
-
-        this.prompt(prompts, function (answers) {
+        }, function (answers) {
             function hasFeature(feat) {
                 return answers.guiBricks.indexOf(feat) !== -1;
             }
@@ -154,13 +161,88 @@ module.exports = yeoman.generators.Base.extend({
                 var component = gui[key];
                 component.include = hasFeature(component.name);
             }
+
             done();
         }.bind(this));
     },
 
     /**
-     * Install Symfony, relocate it on terminal current folder (and not into the
-     * ./Symfony path)
+     * Ask if the developer want to generate an `Acme/Front/App` bundle
+     */
+    askAcmeFrontAppBundle: function() {
+        var done = this.async();
+
+        this.prompt({
+            type: 'confirm',
+            name: 'frontAppBundle',
+            message: 'Would you like to generate a Front/AppBundle ?',
+            default: true
+        }, function (answers) {
+            this.frontAppBundle = answers.frontAppBundle;
+            done();
+        }.bind(this));
+    },
+
+    /**
+     * Ask if the developer want to install victoire
+     */
+    askVictoire: function() {
+        var done = this.async();
+
+        var prompts = [{
+            type: 'confirm',
+            name: 'victoire',
+            message: 'Would you like to implement Victoire',
+            default: true
+        }];
+
+        this.prompt(prompts, function (answers) {
+            this.victoire = answers.victoire;
+            done();
+        }.bind(this));
+    },
+
+    /**
+     * Ask to the developer which victoire widget do he want to install
+     */
+    askVictoireWidget: function() {
+        var done = this.async();
+
+        if (!this.victoire) {
+            return true;
+        }
+
+        request('https://packagist.org/search.json?tags=friendsofvictoire&type=symfony-bundle&per_page=50', function (error, response, body) {
+            var victoireWidgetsJSON = JSON.parse(response.body).results;
+
+            var choices = [];
+            for (var key in victoireWidgetsJSON) {
+                var widget = victoireWidgetsJSON[key];
+
+                // Regex test in order to not display the victoire/victoire repo
+                if (widget.name.match(new RegExp('-widget$'))) {
+                    var choice = choices.push({
+                        name: widget.name,
+                        value: widget.name,
+                        checked: true
+                    });
+                }
+            }
+
+            this.prompt({
+                type: 'checkbox',
+                name: 'victoireWidgets',
+                message: 'Which widgets would you like to implement ?',
+                choices: choices
+            }, function (answers) {
+                this.victoireWidgets = answers.victoireWidgets;
+                done();
+            }.bind(this));
+        }.bind(this));
+    },
+
+    /**
+     * Method used after to unzip a document downloaded
      */
     _unzip: function (archive, destination, opts, cb) {
         if (_.isFunction(opts) && !cb) {
@@ -171,15 +253,15 @@ module.exports = yeoman.generators.Base.extend({
         opts = _.assign({ extract: true }, opts);
 
         var log = this.log.write()
-        .info('... Fetching %s ...', archive)
-        .info(chalk.yellow('This might take a few moments'));
+            .info('... Fetching %s ...', archive)
+            .info(chalk.yellow('This might take a few moments'));
 
         var download = new Download(opts)
-        .get(archive)
-        .dest(destination)
-        .use(function (res) {
-            res.on('data', function () {});
-        });
+            .get(archive)
+            .dest(destination)
+            .use(function (res) {
+                res.on('data', function () {});
+            });
 
         download.run(function (err) {
             if (err) {
@@ -191,6 +273,9 @@ module.exports = yeoman.generators.Base.extend({
         });
     },
 
+    /**
+     * Download and unzip the symfony project
+     */
     symfonyBase: function () {
         var done = this.async();
         var symfonyCommit = this.parsed[this.symfonyDistribution.commit];
@@ -209,6 +294,11 @@ module.exports = yeoman.generators.Base.extend({
         });
     },
 
+    /**
+     * Move the project at the 'this.destinationRoot()' location instead of the
+     * this.destinationRoot() + '/Symfony' path as it was installed after
+     * download
+     */
     moveSymfonyBase: function () {
         var done = this.async();
         var directory = this.destinationRoot() + '/Symfony';
@@ -225,23 +315,27 @@ module.exports = yeoman.generators.Base.extend({
         });
     },
 
+    /**
+     * Check if the symfony installed is with assetic
+     */
     symfonyWithAsseticInstalled: function () {
         var symfonyVersionAssetic = ['2.3', '2.6', '2.7'];
         var checkVersion = symfonyVersionAssetic.indexOf(this.symfonyDistribution.commit);
         this.symfonyWithAssetic = (checkVersion !== -1) ? true : false ;
     },
 
+    /**
+     * Install composer
+     */
     installComposer: function () {
-        if (this.symfonyWithAssetic) {
-            var done = this.async();
-            this.pathComposer = 'php ./composer.phar';
-            child_process.exec('php -r "readfile(\'https://getcomposer.org/installer\');" | php', function (error, stdout, stderr) {
-                console.log(chalk.green('Installing composer locally.'));
-                console.log('See ' + chalk.yellow('http://getcomposer.org')  + ' for more details on composer.');
-                console.log('');
-                done();
-            });
-        }
+        var done = this.async();
+        this.pathComposer = 'php ./composer.phar';
+        child_process.exec('php -r "readfile(\'https://getcomposer.org/installer\');" | php', function (error, stdout, stderr) {
+            console.log(chalk.green('Installing composer locally.'));
+            console.log('See ' + chalk.yellow('http://getcomposer.org')  + ' for more details on composer.');
+            console.log('');
+            done();
+        });
     },
 
     /**
@@ -287,35 +381,33 @@ module.exports = yeoman.generators.Base.extend({
 
     writing: {
         /**
-         * Init all the files for the git workflow
+         * Create dotFiles
          */
-        gitWorkflow: function () {
+        dotFile: function() {
             this.template('_gitignore', '.gitignore');
-        },
-
-        /**
-         * Init all the files for the IDEs & text editors workflow
-         */
-        ideWorkflow: function() {
             this.template('_editorconfig', '.editorconfig');
+            this.template('_scss-lint.yml', '.scss-lint.yml');
+            this.template('_jshintrc', '.jshintrc');
         },
 
         /**
-         * Init all the files for the front workflow
+         * Create all the files for the front workflow
          */
         frontWorkflow: function() {
             this.fs.copyTpl(
                 this.templatePath('gulpfile.js'),
                 this.destinationPath('gulpfile.js'),
-                {
-                    app: this.appBundleName
-                }
+                { app: this.appBundleName }
+            );
+
+            this.fs.copyTpl(
+                this.templatePath('gulp.injector.aliases.js'),
+                this.destinationPath('gulp.injector.aliases.js'),
+                { app: this.appBundleName }
             );
 
             this.template('bower.json', 'bower.json');
             this.template('package.json', 'package.json');
-            this.template('_scss-lint.yml', '.scss-lint.yml');
-            this.template('_jshintrc', '.jshintrc');
         },
     },
 
@@ -330,13 +422,13 @@ module.exports = yeoman.generators.Base.extend({
 
                 if (component.include && this.globalBower) {
                     /* jshint -W083 */
-                        child_process.exec('bower install ' + component.bower + ' --save', function (error, stdout, stderr) {
-                            if (error !== null) {
-                                console.log('exec error: ' + error);
-                            } else {
-                                console.log(chalk.green('[' + component.name + '] installed!'));
-                            }
-                        });
+                    child_process.exec('bower install ' + component.bower + ' --save', function (error, stdout, stderr) {
+                        if (error !== null) {
+                            console.log('exec error: ' + error);
+                        } else {
+                            console.log(chalk.green('[' + component.name + '] installed!'));
+                        }
+                    });
                     /* jshint +W083 */
                 }
             }
@@ -357,22 +449,10 @@ module.exports = yeoman.generators.Base.extend({
         },
 
         /**
-         * Install new AppKernel based on which bundle has been generated
-         */
-        installAppKernel: function () {
-            if (this.symfonyWithAssetic) {
-                var appKernelPath = 'app/AppKernel.php';
-                var appKernelContents = this.readFileAsString(appKernelPath);
-
-                var newAppKernelContents = appKernelContents.replace('new Symfony\\Bundle\\AsseticBundle\\AsseticBundle(),', '');
-                fs.writeFileSync(appKernelPath, newAppKernelContents);
-            }
-        },
-
-        /**
          * Install Acme\Front\TemplateBundle
          */
         installFrontTemplate: function () {
+            var done = this.async();
             var generator = this;
             var bundlePath = 'src/' + generator.appBundleName + '/Front/TemplateBundle';
             var ls = this.spawnCommand('php', ['app/console', 'generate:bundle', '--namespace=' + this.appBundleName + '/Front/TemplateBundle', '--bundle-name=' + this.appBundleName + 'FrontTemplateBundle', '--no-interaction']);
@@ -411,6 +491,8 @@ module.exports = yeoman.generators.Base.extend({
                     generator.destinationPath('.bowerrc'),
                     { app: generator.appBundleName }
                 );
+
+                done();
             });
 
             this.fs.copyTpl(
@@ -422,10 +504,113 @@ module.exports = yeoman.generators.Base.extend({
                 }
             );
         },
+
+        /**
+         * Install Acme\Front\TemplateBundle
+         */
+        installFrontAppBundle: function() {
+            var done = this.async();
+            if (this.frontAppBundle) {
+                var generator = this;
+                var bundlePath = 'src/' + generator.appBundleName + '/Front/AppBundle';
+                var ls = this.spawnCommand('php', ['app/console', 'generate:bundle', '--namespace=' + this.appBundleName + '/Front/AppBundle', '--bundle-name=' + this.appBundleName + 'AppTemplateBundle', '--no-interaction']);
+
+                ls.on('close', function (code) {
+                    done();
+                }.bind(this));
+            }
+        },
     },
 
     end: {
+        composerInstall: function() {
+            var done = this.async();
+
+            var composerJsonPath = 'composer.json';
+            var composerJson = JSON.parse(this.readFileAsString(composerJsonPath));
+            composerJson['minimum-stability'] = 'dev';
+            composerJson.config.platform.php = '5.5.9';
+
+            /**
+             * Merge of victoire requirements to the composerJson
+             */
+            if (this.victoire) {
+                for (var key in composer.victoire) {
+                    composer.global[key] = composer.victoire[key];
+                }
+            }
+
+            /**
+             * Add composer requirements into the composer json object
+             */
+            composerJson.require = composer.global;
+            composerJson['require-dev'] = composer.dev;
+
+            /**
+             * Rewrites composer.json files with the previous changes
+             */
+            fs.writeFile('composer.json', JSON.stringify(composerJson, null, 4), 'utf8', function() {
+
+                /**
+                 * Composer update all the dependencies injected into the
+                 * composer.json before
+                 */
+                var composerUpdate = this.spawnCommand('composer', ['update', '--with-dependencies']);
+
+                /**
+                 * Get all victoire widget select by the developer before
+                 */
+                composerUpdate.on('close', function (code) {
+                    this.spawnCommand('composer', ['require'].concat(this.victoireWidgets));
+                    var composerVictoire = this.spawnCommand('composer', ['require'].concat(this.victoireWidgets));
+                    composerVictoire.on('close', function (code) {
+                        akInjection();
+                        done();
+                    });
+                    done();
+                }.bind(this));
+            }.bind(this));
+            done();
+        },
+
+        /**
+         * Automatic registration of all the bundles downloaded previously by
+         * composer.
+         * (1) We add into the appKernel some comments called 'flag'required
+         *     by akInjection
+         * (2) We run akInjection that will automaticaly include bundle
+         *     declaration into the appKernel
+         */
+        registerBundles: function() {
+            console.log(chalk.green('REGISTER BUNDLES'));
+            var done = this.async();
+
+            var preflag = {
+                prod: 'new Sensio\\Bundle\\FrameworkExtraBundle\\SensioFrameworkExtraBundle(),\n',
+                dev: '$bundles[] = new Sensio\\Bundle\\GeneratorBundle\\SensioGeneratorBundle();\n',
+            };
+
+            var flag = {
+                prod: '\n            // Automatic AppKernel:prod injection\n',
+                dev: '\n            // Automatic AppKernel:dev injection\n'
+            };
+
+            // (1)
+            var appKernelPath = 'app/AppKernel.php';
+            var appKernelContents = this.readFileAsString(appKernelPath);
+            var newAppKernelContents = appKernelContents.replace(preflag.prod, flag.prod).replace(preflag.dev, flag.dev);
+            fs.writeFile(appKernelPath, newAppKernelContents, function() {
+                // (2)
+                akInjection();
+                done();
+            });
+        },
+
         cleanConfig: function () {
+            /**
+             * While the assetic injector transition is not complete with our
+             * bundles, we still need assetic
+             */
             if (this.symfonyWithAssetic) {
                 var confDev = yaml.safeLoad(fs.readFileSync('app/config/config_dev.yml'));
                 delete confDev.assetic;
