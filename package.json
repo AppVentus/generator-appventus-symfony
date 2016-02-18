@@ -20,10 +20,16 @@
     "yeoman-generator"
   ],
   "dependencies": {
+    "appkernel-injection": "^1.0.3",
     "chalk": "^0.5.0",
     "fs-extra": "^0.22.1",
+    "fs-finder": "^1.8.1",
+    "github": "^0.2.4",
     "js-yaml": "^3.2.3",
+    "lodash": "^4.5.0",
     "mkdirp": "^0.5.1",
+    "path": "^0.12.7",
+    "request": "^2.69.0",
     "rimraf": "^2.4.2",
     "yeoman-generator": "^0.18.0",
     "yosay": "^0.3.0"
